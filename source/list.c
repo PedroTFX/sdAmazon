@@ -47,7 +47,7 @@ int list_add(struct list_t *list, struct entry_t *entry){ //TODO test
     }
 
     if(!list->entry){ //entry null means new list return should be 0
-        list->entry = entry_create(entry->key, entry->value);
+        list->entry = entry_create(entry->key, entry->value); // this should make leaks
         return (list->entry) ? 0 : -1;
     }
 
