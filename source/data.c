@@ -1,4 +1,6 @@
 #include <data.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Função que cria um novo elemento de dados data_t e que inicializa
 * os dados de acordo com os argumentos recebidos, sem necessidade de
@@ -6,7 +8,7 @@
 * Retorna a nova estrutura ou NULL em caso de erro.
 */
 struct data_t* data_create(int size, void *data){
-    if(size <= 0 || data == NULL){
+    if(size <= 0 || !data){
         return NULL;
     }
 

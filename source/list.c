@@ -1,7 +1,10 @@
-#include <data.h>
-#include <entry.h>
-#include <list.h>
-#include <list-private.h>
+#include <stdlib.h>
+#include "data.h"
+#include "entry.h"
+#include "list.h"
+#include "list-private.h"
+#include <string.h>
+
 
 
 /* Função que cria e inicializa uma nova lista (estrutura list_t a
@@ -10,6 +13,9 @@
 */
 struct list_t *list_create(){   //TODO check if works
     struct list_t* list = malloc(sizeof(struct list_t));
+    if(!list){
+        return NULL;
+    }
     return list; // if failed to create should return NULL
 }
 
@@ -28,7 +34,7 @@ int list_destroy(struct list_t *list){ //TODO test
         free(list);
         list = NULL;
     }
-    return (list || list->entry || list->next) -1 : 0;
+    return (list || list->entry || list->next) ? -1 : 0;
 }
 
 /* Função que adiciona à lista a entry passada como argumento.
@@ -64,6 +70,7 @@ int list_add(struct list_t *list, struct entry_t *entry){ //TODO test
     if(comp == 1){ //entry > list->entry
         return list_add(list->next, entry);
     }
+    return -1;
 }
 
 /* Função que elimina da lista a entry com a chave key, libertando a
@@ -71,22 +78,48 @@ int list_add(struct list_t *list, struct entry_t *entry){ //TODO test
 * Retorna 0 se encontrou e removeu a entry, 1 se não encontrou a entry,
 * ou -1 em caso de erro.
 */
-int list_remove(struct list_t *list, char *key);
+int list_remove(struct list_t *list, char *key){
+    if(!list || !key){
+        return -1;
+    }
+
+    //find the prev
+    struct list_t* prev = list;
+    while(prev->next && strcmp(prev->next->entry->key, key) != 0){
+        prev = prev->next;
+    }
+
+    //get the next next
+    struct list_t* next_next = prev->next->next;
+
+    //remove the next (key)
+    entry_destroy(prev->next->entry);
+    free(prev->next);
+
+    //set the prev next to the next next
+    prev->next = next_next;
+
+    return 0;
+}
 
 /* Função que obtém da lista a entry com a chave key.
 * Retorna a referência da entry na lista ou NULL se não encontrar a
 * entry ou em caso de erro.
 */
-struct entry_t *list_get(struct list_t *list, char *key){
-    int comp = strcmp(list->entry->key, key);
-    return comp == 0 ? list->entry : ((comp > 0 && list.next) ? list_get(list.next, key) : NULL); //TODO test
-}
+// struct entry_t *list_get(struct list_t *list, char *key){
+//     int comp = strcmp(list->entry->key, key);
+//     return comp == 0 ? list->entry : ((comp > 0 && list->next) ? list_get(list->next, key) : NULL); //TODO test
+// }
 
 /* Função que conta o número de entries na lista passada como argumento.
 * Retorna o tamanho da lista ou -1 em caso de erro.
 */
 int list_size(struct list_t *list){ //this should work
-    struct current_list = list;
+    if(!list){
+        return -1;
+    }
+
+    struct list_t* current_list = list;
     int count = 0;
     while(current_list->next){
         count++;
@@ -100,10 +133,41 @@ int list_size(struct list_t *list){ //this should work
 * reservando toda a memória necessária.
 * Retorna o array de strings ou NULL em caso de erro.
 */
-char **list_get_keys(struct list_t *list);
+char **list_get_keys(struct list_t *list){
+    int size = list_size(list);
+    char** keys = malloc(sizeof(char*) * (size + 1));
+    if(!keys){
+        return NULL;
+    }
+
+    struct list_t* current_list = list;
+    int i = 0;
+    while(current_list->next){
+        keys[i] = strdup(current_list->entry->key);
+        if(!keys[i]){
+            return NULL;
+        }
+        i++;
+        current_list = current_list->next;
+    }
+    keys[i] = NULL;
+    return keys;
+}
 
 /* Função que liberta a memória ocupada pelo array de keys obtido pela
 * função list_get_keys.
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
-int list_free_keys(char **keys);
+int list_free_keys(char **keys){
+    if(!keys){
+        return -1;
+    }
+
+    int i = 0;
+    while(keys[i]){
+        free(keys[i]);
+        i++;
+    }
+    free(keys);
+    return 0;
+}

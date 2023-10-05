@@ -1,5 +1,7 @@
 #include <entry.h>
 #include <data.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Função que cria uma entry, reservando a memória necessária e
 * inicializando-a com a string e o bloco de dados de entrada.
@@ -33,7 +35,7 @@ int entry_destroy(struct entry_t *entry){
 	}
 
     //TODO test return
-    return (entry || entry->value || entry->key) -1 : 0;
+    return (entry || entry->value || entry->key) ? -1 : 0;
 }
 
 /* Função que duplica uma entry, reservando a memória necessária para a
