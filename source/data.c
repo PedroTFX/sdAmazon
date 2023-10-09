@@ -28,17 +28,18 @@ struct data_t* data_create(int size, void *data){
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
 int data_destroy(struct data_t *data){
+	if(data == NULL){
+		return -1;
+	}
+
 	if(data){
 		if(data->data) {
 			free(data->data);
-			data->data = NULL;
 		}
 		free(data);
-		data = NULL;
 	}
 
-    //TODO test the return
-    return (data || data->data) ? -1 : 0;
+    return 0;
 }
 
 /* Função que duplica uma estrutura data_t, reservando a memória

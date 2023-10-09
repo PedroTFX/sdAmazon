@@ -8,10 +8,15 @@
 * Retorna a nova entry ou NULL em caso de erro.
 */
 struct entry_t *entry_create(char *key, struct data_t *data){
+	if(key == NULL || data == NULL){
+		return NULL;
+	}
+
     struct entry_t* entry = malloc(sizeof(struct entry_t));
 	if (!entry) {
 		return NULL;
 	}
+	
 	entry->key = key;
 	entry->value = data;
 	
@@ -22,20 +27,20 @@ struct entry_t *entry_create(char *key, struct data_t *data){
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
 int entry_destroy(struct entry_t *entry){
-    if (entry) {
-		if (entry->value) {
-			data_destroy(entry->value);
-		}
-		if (entry->key) {
-			free(entry->key);
-			entry->key = NULL;
-		}
-		free(entry);
-		entry = NULL;
+	if(entry == NULL || entry->key == NULL || entry->value == NULL){
+		return -1;
 	}
 
-    //TODO test return
-    return (entry || entry->value || entry->key) ? -1 : 0;
+	if (entry->value) {
+		data_destroy(entry->value);
+	}
+	if (entry->key) {
+		free(entry->key);
+		entry->key = NULL;
+	}
+	free(entry);
+	entry = NULL;
+	return 0;
 }
 
 /* Função que duplica uma entry, reservando a memória necessária para a
@@ -63,6 +68,10 @@ struct entry_t *entry_dup(struct entry_t *entry){
 * Retorna 0 (OK) ou -1 em caso de erro.
 */
 int entry_replace(struct entry_t *entry, char *new_key, struct data_t *new_value){
+	if(!entry || !entry->key || !entry->value || !new_key || !new_value){
+		return -1;
+	}
+
     free(entry->key);
 	entry->key = new_key;
 
@@ -70,7 +79,7 @@ int entry_replace(struct entry_t *entry, char *new_key, struct data_t *new_value
 	entry->value = new_value;
 
     //TODO test return
-    return (entry-> value == new_value && strcmp(entry->key, new_key) == 0) ? 0 : -1; 
+    return 0; 
 }
 
 /* Função que compara duas entries e retorna a ordem das mesmas, sendo esta
@@ -79,6 +88,10 @@ int entry_replace(struct entry_t *entry, char *new_key, struct data_t *new_value
 * 1 se entry1 > entry2 ou -2 em caso de erro.
 */
 int entry_compare(struct entry_t *entry1, struct entry_t *entry2){
+	if(entry1 == NULL || entry2 == NULL || entry1->key == NULL || entry2->key == NULL){
+		return -2;
+	}
+
     int result = strcmp(entry1->key, entry2->key);
 	return (result == 0) ? 0 : (result > 0) ? 1 : -1;
 }
