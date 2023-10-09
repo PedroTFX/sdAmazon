@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/binary/test_list",
+            "program": "${workspaceFolder}/binary/test_table",
             "args": [],
             "cwd": "${workspaceFolder}"
         }
