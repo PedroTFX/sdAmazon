@@ -4,6 +4,7 @@
 #include "list.h"
 #include "list-private.h"
 #include <string.h>
+#include <stdio.h>
 
 
 
@@ -16,20 +17,20 @@ struct list_t *list_create(){   //TODO check if works
     if(!list){
         return NULL;
     }
+    list->size = 0;
+    list->head = NULL;
     return list; // if failed to create should return NULL
 }
 
-int node_destroy(struct node_t *node){
+//recursive function to destroy a linked list
+int node_destroy(struct node_t* node){
     if(!node){
         return -1;
     }
-
     if(node->next){
         node_destroy(node->next);
     }
-    if(node->entry){
-        entry_destroy(node->entry);
-    }
+    entry_destroy(node->entry);
     free(node);
     return 0;
 }
@@ -43,49 +44,12 @@ int list_destroy(struct list_t *list){ //TODO test
         return -1;
     }
 
-    int return_value_node = node_destroy(list->head);
+    int ret = node_destroy(list->head);
     free(list);
-
-    return return_value_node;
-
+    return ret;
 }
 
-int add_entry_on_node_list(struct node_t *node, struct entry_t *entry){
-    if(!node || !entry){
-        return -1;
-    }
 
-    if(!node->entry){
-        node->entry = entry;
-        node->next = NULL;
-        return 0;
-    }
-
-    int comp = entry_compare(node->entry, entry);
-    if(comp == 0){ // replace entry
-        entry_replace(node->entry, entry->key, entry->value);
-        return 1;
-    }
-    if(comp < 0){
-        if(!node->next){
-            node->next = malloc(sizeof(struct node_t));
-            if(!node->next){
-                return -1;
-            }
-        }
-        return add_entry_on_node_list(node->next, entry);
-    }if(comp > 0){
-        struct node_t* aux = malloc(sizeof(struct node_t));
-        if(!aux){
-            return -1;
-        }
-        aux->entry = entry;
-        aux->next = node;
-        node = aux;
-        return 0;
-    }
-    return -1;
-}
 
 /* Função que adiciona à lista a entry passada como argumento.
 * A entry é inserida de forma ordenada, tendo por base a comparação
@@ -101,22 +65,130 @@ int list_add(struct list_t *list, struct entry_t *entry){ //TODO test
     if(!list || !entry){
         return -1;
     }
-    
-    //
+
+    //head is empty
     if(!list->head){
         list->head = malloc(sizeof(struct node_t));
-        list->head->entry = entry; 
+        if(!list->head){
+            return -1;
+        }
+        list->head->entry = entry;
         list->head->next = NULL;
-        list->size = 1;
+        list->size++;
         return 0;
     }
 
-    //add entry
-    int ret = add_entry_on_node_list(list->head, entry);
-    if(ret != -1){
+    //head is not empty
+    struct node_t* current = list->head;
+    int comp = entry_compare(current->entry, entry);
+    if(comp == 0){
+        entry_destroy(current->entry);
+        current->entry = entry;
+        return 1;
+    }else if(comp > 0){
+        struct node_t* new = malloc(sizeof(struct node_t));
+        if(!new){
+            return -1;
+        }
+        new->entry = entry;
+        new->next = list->head;
+        list->head = new;
         list->size++;
+        return 0;
     }
-    return ret;
+
+    //its not in the head
+    while(comp < 0 && current->next){
+        current = current->next;
+        comp = entry_compare(current->entry, entry);
+    }
+
+
+    
+
+    //its in the middle
+    if(comp == 0){
+        entry_destroy(current->entry);
+        current->entry = entry;
+        return 1;
+    }else if(comp > 0){
+        struct node_t* new = malloc(sizeof(struct node_t));
+        if(!new){
+            return -1;
+        }
+        new->entry = entry;
+        new->next = current->next;
+        current->next = new;
+        list->size++;
+        return 0;
+    }
+    //its the last one
+    if(!current->next){ 
+        struct node_t* new = malloc(sizeof(struct node_t));
+        if(!new){
+            return -1;
+        }
+        new->entry = entry;
+        new->next = NULL;
+        current->next = new;
+        list->size++;
+        return 0;
+    }
+    return -1;
+}
+
+
+
+int node_remove_last(struct node_t* node){
+    if (!node) {
+        return -1;  // Handle the case of an empty list or an invalid node.
+    }
+
+    // If the current node is the last node, remove it.
+    if (!node->next) {
+        entry_destroy(node->entry);
+        // free(node);
+        return 0;
+    }
+
+    // Recursively traverse the list.
+    if (node_remove_last(node->next) == 0) {
+        // If the last node has been successfully removed,
+        // update the next pointer of the current node.
+        node->next = NULL;
+    }
+
+    return -1;  // Handle any other error case if necessary.
+}
+
+//move node to tail
+int remove_node(struct node_t* node){
+    if(!node){
+        return -1;
+    }
+    if(!node->next){
+        // printf("last node\n");
+        entry_destroy(node->entry);
+        
+        node->entry = NULL;
+        node->next = NULL;
+        node = NULL;
+        return 0;
+    }
+    //trade nodes entries
+    // printf("%s", node->entry->key);
+    // printf("<-before-> %s\n", node->next->entry->key);
+
+    struct entry_t* temp = node->entry;
+    node->entry = node->next->entry;
+    node->next->entry = temp;
+
+    // printf("%s", node->entry->key);
+    // printf("<-after-> %s\n", node->next->entry->key);
+    // printf("----------------------------------------------------------------------------------- %s\n", node->next->entry->key);
+
+
+    return remove_node(node->next);
 }
 
 /* Função que elimina da lista a entry com a chave key, libertando a
@@ -125,29 +197,35 @@ int list_add(struct list_t *list, struct entry_t *entry){ //TODO test
 * ou -1 em caso de erro.
 */
 int list_remove(struct list_t *list, char *key){
-    if(!list || !list->head || !key){
+    // printf("to_remove: %s\n", key);
+    if(!list || !key){
+        return -1;
+    }
+    struct node_t* current = list->head;
+    int comp = strcmp(list->head->entry->key, key);
+    if(comp == 0){
+        int ret = remove_node(list->head);
+        if(ret == 0){
+            list->size -= 1;
+            return 0;
+        }
         return -1;
     }
 
-    struct node_t* node = list->head;
-    if(strcmp(node->entry->key, key) == 0){
-        list->head = node->next;
-        entry_destroy(node->entry);
-        free(node);
+
+    while(comp != 0 && current->next){
+        current = current->next;
+        comp = strcmp(current->entry->key, key);
+    }
+    if(comp != 0){
+        return 1;
+    }
+    int ret = remove_node(current);
+    if(ret == 0){
+        list->size -= 1;
         return 0;
     }
-
-    while(node->next){
-        int comp = strcmp(node->next->entry->key, key);
-        if(comp == 0){
-            struct node_t* aux = node->next->next;
-            node->next = aux;
-            entry_destroy(node->next->entry);
-            free(node->next);
-            return 0;
-        }
-    }
-    return 1;
+    return -1;
 }
 
 /* Função que obtém da lista a entry com a chave key.
@@ -155,28 +233,21 @@ int list_remove(struct list_t *list, char *key){
 * entry ou em caso de erro.
 */
 struct entry_t *list_get(struct list_t *list, char *key){
-    if(!list || !list->head || !key){
+    if(!list || !key){
         return NULL;
     }
 
-    struct node_t* node = list->head;
-    int comp = strcmp(node->entry->key, key);
-    if(comp == 0){
-        return node->entry;
-    }else if(comp > 0){
-        return NULL;
-    }else{
-        while(node->next){
-            comp = strcmp(node->next->entry->key, key);
-            if(comp == 0){
-                return node->next->entry;
-            }else if(comp > 0){
-                return NULL;
-            }
-            node = node->next;
-        }
-        return NULL;
+    //init
+    struct node_t* current = list->head;
+    int comp = strcmp(current->entry->key, key);
+    
+
+    //search
+    while(comp != 0 && current->next){
+        current = current->next;
+        comp = strcmp(current->entry->key, key);
     }
+    return (comp == 0) ? current->entry : NULL;
 }
 
 /* Função que conta o número de entries na lista passada como argumento.
@@ -186,14 +257,7 @@ int list_size(struct list_t *list){ //this should work
     if(!list){
         return -1;
     }
-
-    int size = 0;
-    struct node_t* node = list->head;
-    while(node){
-        size++;
-        node = node->next;
-    }
-    return size;
+    return list->size;
 }
 
 /* Função que constrói um array de char* com a cópia de todas as keys na
@@ -202,33 +266,22 @@ int list_size(struct list_t *list){ //this should work
 * Retorna o array de strings ou NULL em caso de erro.
 */
 char **list_get_keys(struct list_t *list){
-    if(!list){
+    if(!list || !list->head){
         return NULL;
     }
-
-    int size = list_size(list);
-    char** keys = malloc(sizeof(char*) * (size + 1));
+    char** keys = malloc(sizeof(char*) * (list->size + 1));
     if(!keys){
         return NULL;
     }
-
-    struct node_t* node = list->head;
+    struct node_t* current = list->head;
     int i = 0;
-    while(node){
-        keys[i] = strdup(node->entry->key);
-        if(!keys[i]){
-            list_free_keys(keys);
-            return NULL;
-        }
+    while(current){
+        keys[i] = strdup(current->entry->key);
+        current = current->next;
         i++;
-        node = node->next;
     }
     keys[i] = NULL;
-    if(i == 0){
-        return NULL;
-    }
-
-    return keys;    
+    return keys;
 }
 
 /* Função que liberta a memória ocupada pelo array de keys obtido pela
@@ -239,7 +292,6 @@ int list_free_keys(char **keys){
     if(!keys){
         return -1;
     }
-
     int i = 0;
     while(keys[i]){
         free(keys[i]);
