@@ -1,13 +1,14 @@
 #include "client_stub.h"
 #include "sdmessage.pb-c.h"
-#include "network_client-private.h"
-#include "message-private.h"
+// #include "network_client-private.h"
+// #include "message-private.h"
 #include "client_stub-private.h"
 #include "table.h"
 #include "table-private.h"
 #include "entry.h"
 #include "data.h"
-#include "inet.h"
+// #include <inet.h>
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

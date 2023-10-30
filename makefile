@@ -18,7 +18,8 @@ BASEFLAGS := $(addprefix -D ,$(MACROS))
 DEBUGFLAGS := $(BASEFLAGS) -g -Wall
 RELEASEFLAGS := $(BASEFLAGS) -O2
 
-run: clean setup data.o entry.o list.o table.o test_data test_entry test_list test_table
+run: clean setup data.o entry.o list.o table.o test_data test_entry test_list test_table network_client.o network_server.o client_stub.o table_skel.o table_client.o table_server.o message.o
+	
 
 clean:
 # rm -rf $(OBJDIR)
@@ -43,6 +44,28 @@ list.o:
 
 table.o:
 	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/table.c -o $(OBJDIR)/table.o -I $(INCLUDEDIR)
+
+# compile network table
+network_client.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/network_client.c -o $(OBJDIR)/network_client.o -I $(INCLUDEDIR)
+
+network_server.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/network_server.c -o $(OBJDIR)/network_server.o -I $(INCLUDEDIR)
+
+client_stub.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/client_stub.c -o $(OBJDIR)/client_stub.o -I $(INCLUDEDIR)
+
+table_skel.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/table_skel.c -o $(OBJDIR)/table_skel.o -I $(INCLUDEDIR)
+
+table_client.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/table_client.c -o $(OBJDIR)/table_client.o -I $(INCLUDEDIR)
+
+table_server.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/table_server.c -o $(OBJDIR)/table_server.o -I $(INCLUDEDIR)
+
+message.o:
+	$(CC) $(DEBUGFLAGS) -c $(SRCDIR)/message.c -o $(OBJDIR)/message.o -I $(INCLUDEDIR)
 
 
 #---------------TESTs------------------------------------

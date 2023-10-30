@@ -1,5 +1,18 @@
 #include "table.h"
 #include "sdmessage.pb-c.h"
+// #include "message-private.h"
+// #include "network_client-private.h"
+#include "client_stub-private.h"
+#include "client_stub.h"
+#include "table-private.h"
+#include "entry.h"
+#include "data.h"
+// #include <inet.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 
 /* Função para preparar um socket de receção de pedidos de ligação
 * num determinado porto.
