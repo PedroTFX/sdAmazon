@@ -18,10 +18,10 @@ BASEFLAGS := $(addprefix -D ,$(MACROS))
 DEBUGFLAGS := $(BASEFLAGS) -g -Wall
 RELEASEFLAGS := $(BASEFLAGS) -O2
 
-run: clean setup data.o entry.o list.o table.o 
+run: clean setup data.o entry.o list.o table.o test_data test_entry test_list test_table
 
 clean:
-	rm -rf $(OBJDIR)
+# rm -rf $(OBJDIR)
 	rm -rf $(BINDIR)
 	rm -rf $(LIBDIR)
 
